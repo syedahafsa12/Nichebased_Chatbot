@@ -14,7 +14,7 @@ def add_custom_css():
         <style>
         body {
             background: linear-gradient(to bottom, #232526, #414345);
-            font-family: "Arial", sans-serif;
+            # font-family: "Arial", sans-serif;
             color: #FFFFFF;
         }
         h1, h3 {
@@ -131,7 +131,7 @@ def create_meal_planner_with_categories():
 
     # Title and Header
     st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)
-    st.markdown("<h3>Your Smart Recipe & Chat Assistant</h3>", unsafe_allow_html=True)
+    st.markdown("Your Smart Recipe & Chat Assistant", unsafe_allow_html=True)
 
     # Load API Keys
     try:
@@ -143,7 +143,7 @@ def create_meal_planner_with_categories():
         return
 
     # Ingredient Input
-    st.write("### 🍅 What is in your fridge?")
+    st.write("## 🍅 What is in your fridge?")
     ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')", placeholder="Type your ingredients...")
     meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack"])
 
