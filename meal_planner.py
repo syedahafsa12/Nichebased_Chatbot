@@ -109,9 +109,9 @@ def add_to_memory(user_input, bot_response):
 
 def display_memory():
     """Display the last 10 chats."""
-    st.markdown('<p>##### 💬 Conversation History</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; font-size: 24px; font-weight: bold;">💬 Conversation History</p>', unsafe_allow_html=True)
     if "history" in st.session_state:
-        for chat in reversed(st.session_state["history"]):  
+        for chat in reversed(st.session_state["history"]):  # Show latest first
             st.write(f"🕒 {chat['timestamp']}")
             st.write(f"**You:** {chat['user']}")
             st.write(f"**Bot:** {chat['bot']}")
@@ -124,7 +124,7 @@ def create_meal_planner_with_categories():
 
     # Title and Header
     st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)
-    st.markdown('<p>##### Your Smart Recipe & Chat Assistant</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold;">Your Smart Recipe & Chat Assistant</p>', unsafe_allow_html=True)
 
     # Load API Keys
     try:
@@ -136,7 +136,7 @@ def create_meal_planner_with_categories():
         return
 
     # Ingredient Input
-    st.markdown('<p>##### 🍅 What is in your fridge?</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold;">🍅 What is in your fridge?</p>', unsafe_allow_html=True)
     ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')", placeholder="Type your ingredients...")
     meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack"])
 
@@ -162,7 +162,7 @@ def create_meal_planner_with_categories():
         add_to_memory(f"Ingredients: {ingredients}, Meal Type: {meal_type}", bot_response)
 
     # Chat Box
-    st.markdown('<p>##### 💬 Ask me anything!</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold;">💬 Ask me anything!</p>', unsafe_allow_html=True)
     user_input = st.text_input("You:", placeholder="Ask me about meals, ingredients, or anything else...")
     if user_input:
         context = "\n".join(
