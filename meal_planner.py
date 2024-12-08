@@ -116,7 +116,7 @@ def add_to_memory(user_input, bot_response):
 
 def display_memory():
     """Display the last 10 chats."""
-    st.markdown("## 💬 Conversation History")
+    st.markdown("###### 💬 Conversation History")
     if "history" in st.session_state:
         for chat in reversed(st.session_state["history"]):  # Show latest first
             st.write(f"🕒 {chat['timestamp']}")
