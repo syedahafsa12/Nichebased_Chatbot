@@ -20,7 +20,10 @@ def add_custom_css():
         h1, h2 {
             text-align: center;
             color: #86AB89;
-        }
+        },
+        p{
+         text-align: center;
+        },
         .conversation-box {
             max-height: 300px;
             overflow-y: auto;
@@ -116,7 +119,7 @@ def add_to_memory(user_input, bot_response):
 
 def display_memory():
     """Display the last 10 chats."""
-    st.markdown("##### 💬 Conversation History")
+    st.markdown(<p>"##### 💬 Conversation History"</p>)
     if "history" in st.session_state:
         for chat in reversed(st.session_state["history"]):  # Show latest first
             st.write(f"🕒 {chat['timestamp']}")
@@ -131,7 +134,7 @@ def create_meal_planner_with_categories():
 
     # Title and Header
     st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)
-    st.markdown("##### Your Smart Recipe & Chat Assistant")
+    st.markdown(<p>"##### Your Smart Recipe & Chat Assistant"</p>)
 
     # Load API Keys
     try:
@@ -143,7 +146,7 @@ def create_meal_planner_with_categories():
         return
 
     # Ingredient Input
-    st.write("🍅 What is in your fridge?")
+    st.write(<p>"🍅 What is in your fridge?"</p>)
     ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')", placeholder="Type your ingredients...")
     meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack"])
 
@@ -170,7 +173,7 @@ def create_meal_planner_with_categories():
         add_to_memory(f"Ingredients: {ingredients}, Meal Type: {meal_type}", bot_response)
 
     # Chat Box
-    st.markdown("##### 💬 Ask me anything!")
+    st.markdown(<p>"##### 💬 Ask me anything!"</p>)
     user_input = st.text_input("You:", placeholder="Ask me about meals, ingredients, or anything else...")
     if user_input:
         # Use Chat Memory Context
