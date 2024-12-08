@@ -19,7 +19,7 @@ def add_custom_css():
         }
         h1, h3 {
             text-align: center;
-            color: #FFD700;
+            color: #FFFFFF;
         }
         .conversation-box {
             max-height: 300px;
