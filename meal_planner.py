@@ -17,7 +17,7 @@ def add_custom_css():
             # font-family: "Arial", sans-serif;
             color: #FFFFFF;
         }
-        h1, h3 {
+        h1, h2 {
             text-align: center;
             color: #86AB89;
         }
@@ -116,7 +116,7 @@ def add_to_memory(user_input, bot_response):
 
 def display_memory():
     """Display the last 10 chats."""
-    st.markdown("### 💬 Conversation History")
+    st.markdown("## 💬 Conversation History")
     if "history" in st.session_state:
         for chat in reversed(st.session_state["history"]):  # Show latest first
             st.write(f"🕒 {chat['timestamp']}")
@@ -131,7 +131,7 @@ def create_meal_planner_with_categories():
 
     # Title and Header
     st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)
-    st.markdown("Your Smart Recipe & Chat Assistant", unsafe_allow_html=True)
+    st.write("Your Smart Recipe & Chat Assistant")
 
     # Load API Keys
     try:
@@ -143,7 +143,7 @@ def create_meal_planner_with_categories():
         return
 
     # Ingredient Input
-    st.write("## 🍅 What is in your fridge?")
+    st.write("🍅 What is in your fridge?")
     ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')", placeholder="Type your ingredients...")
     meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack"])
 
@@ -159,7 +159,7 @@ def create_meal_planner_with_categories():
             st.warning(f"No {meal_type.lower()} meal ideas found! Try adding more ingredients.")
             bot_response = f"I couldn't find any {meal_type.lower()} meal ideas based on those ingredients."
         else:
-            st.markdown(f"### 🍽️ {meal_type} Meal Suggestions")
+            st.markdown(f"## 🍽️ {meal_type} Meal Suggestions")
             bot_response = f"Here are some {meal_type.lower()} meal ideas based on your ingredients:"
             for recipe in spoonacular_recipes:
                 st.write(f"**{recipe.get('title', 'No title')}**")
@@ -170,7 +170,7 @@ def create_meal_planner_with_categories():
         add_to_memory(f"Ingredients: {ingredients}, Meal Type: {meal_type}", bot_response)
 
     # Chat Box
-    st.write("### 💬 Ask me anything!")
+    st.write("## 💬 Ask me anything!")
     user_input = st.text_input("You:", placeholder="Ask me about meals, ingredients, or anything else...")
     if user_input:
         # Use Chat Memory Context
