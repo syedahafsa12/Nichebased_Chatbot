@@ -131,7 +131,7 @@ def create_meal_planner_with_categories():
 
     # Title and Header
     st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)
-    st.write("Your Smart Recipe & Chat Assistant")
+    st.markdown("##### Your Smart Recipe & Chat Assistant")
 
     # Load API Keys
     try:
@@ -170,7 +170,7 @@ def create_meal_planner_with_categories():
         add_to_memory(f"Ingredients: {ingredients}, Meal Type: {meal_type}", bot_response)
 
     # Chat Box
-    st.write("## 💬 Ask me anything!")
+    st.markdown("##### 💬 Ask me anything!")
     user_input = st.text_input("You:", placeholder="Ask me about meals, ingredients, or anything else...")
     if user_input:
         # Use Chat Memory Context
