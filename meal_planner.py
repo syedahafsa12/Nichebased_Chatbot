@@ -22,6 +22,7 @@ def add_custom_css():
         }
         p {
             text-align: center !important;
+            color: #86AB89;
         }
         .conversation-box {
             max-height: 300px;
