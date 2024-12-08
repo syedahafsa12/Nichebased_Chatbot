@@ -22,7 +22,7 @@ def add_custom_css():
             color: #86AB89;
         },
         p{
-         text-align: center;
+         text-align: center !important;
         },
         .conversation-box {
             max-height: 300px;
@@ -146,7 +146,7 @@ def create_meal_planner_with_categories():
         return
 
     # Ingredient Input
-    st.write(<p>"🍅 What is in your fridge?"</p>)
+    st.write(<p>"#####🍅 What is in your fridge?"</p>)
     ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')", placeholder="Type your ingredients...")
     meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack"])
 
