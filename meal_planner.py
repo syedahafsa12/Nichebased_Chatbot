@@ -14,16 +14,15 @@ def add_custom_css():
         <style>
         body {
             background: linear-gradient(to bottom, #232526, #414345);
-            # font-family: "Arial", sans-serif;
             color: #FFFFFF;
         }
         h1, h2 {
             text-align: center;
             color: #86AB89;
-        },
-        p{
-         text-align: center !important;
-        },
+        }
+        p {
+            text-align: center !important;
+        }
         .conversation-box {
             max-height: 300px;
             overflow-y: auto;
@@ -45,16 +44,8 @@ def load_api_keys():
     try:
         spoonacular_key = st.secrets["SPOONACULAR_API_KEY"]
         gemini_key = st.secrets["GEMINI_API_KEY"]
-        # st.success("✅ Using Streamlit Secrets API keys.")
     except Exception:
         pass
-
-    # if not spoonacular_key or not gemini_key:
-    #     load_dotenv()
-    #     spoonacular_key = os.getenv("SPOONACULAR_API_KEY")
-    #     gemini_key = os.getenv("GEMINI_API_KEY")
-    #     if spoonacular_key and gemini_key:
-    #         st.success("✅ Using .env API keys.")
 
     if not spoonacular_key or not gemini_key:
         st.error("🚨 API keys not found! Add them to Streamlit Secrets or .env file.")
@@ -69,7 +60,7 @@ def get_meal_ideas(ingredients, meal_type, api_key):
     params = {
         "query": meal_type,
         "includeIngredients": ingredients,
-        "number": 10,  # Fetch up to 10 recipes
+        "number": 10, 
         "apiKey": api_key,
     }
 
@@ -77,8 +68,7 @@ def get_meal_ideas(ingredients, meal_type, api_key):
         response = requests.get(url, params=params)
         response.raise_for_status()
         recipes = response.json().get("results", [])
-
-        # Fetch recipe details to confirm ingredient match
+        
         detailed_recipes = []
         for recipe in recipes:
             recipe_id = recipe.get("id")
@@ -119,9 +109,9 @@ def add_to_memory(user_input, bot_response):
 
 def display_memory():
     """Display the last 10 chats."""
-    st.markdown(<p>"##### 💬 Conversation History"</p>)
+    st.markdown('<p>##### 💬 Conversation History</p>', unsafe_allow_html=True)
     if "history" in st.session_state:
-        for chat in reversed(st.session_state["history"]):  # Show latest first
+        for chat in reversed(st.session_state["history"]):  
             st.write(f"🕒 {chat['timestamp']}")
             st.write(f"**You:** {chat['user']}")
             st.write(f"**Bot:** {chat['bot']}")
@@ -134,7 +124,7 @@ def create_meal_planner_with_categories():
 
     # Title and Header
     st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)
-    st.markdown(<p>"##### Your Smart Recipe & Chat Assistant"</p>)
+    st.markdown('<p>##### Your Smart Recipe & Chat Assistant</p>', unsafe_allow_html=True)
 
     # Load API Keys
     try:
@@ -146,7 +136,7 @@ def create_meal_planner_with_categories():
         return
 
     # Ingredient Input
-    st.write(<p>"#####🍅 What is in your fridge?"</p>)
+    st.markdown('<p>##### 🍅 What is in your fridge?</p>', unsafe_allow_html=True)
     ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')", placeholder="Type your ingredients...")
     meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack"])
 
@@ -154,7 +144,6 @@ def create_meal_planner_with_categories():
         with st.spinner("Fetching meal ideas... 🍳"):
             spoonacular_recipes = get_meal_ideas(ingredients, meal_type, spoonacular_key)
 
-        # Display Meal Results
         if isinstance(spoonacular_recipes, dict) and "error" in spoonacular_recipes:
             st.error(f"Spoonacular Error: {spoonacular_recipes['error']}")
             bot_response = "Sorry, I couldn't fetch meal ideas right now. Try again later!"
@@ -173,10 +162,9 @@ def create_meal_planner_with_categories():
         add_to_memory(f"Ingredients: {ingredients}, Meal Type: {meal_type}", bot_response)
 
     # Chat Box
-    st.markdown(<p>"##### 💬 Ask me anything!"</p>)
+    st.markdown('<p>##### 💬 Ask me anything!</p>', unsafe_allow_html=True)
     user_input = st.text_input("You:", placeholder="Ask me about meals, ingredients, or anything else...")
     if user_input:
-        # Use Chat Memory Context
         context = "\n".join(
             [f"You: {chat['user']}\nBot: {chat['bot']}" for chat in st.session_state.get("history", [])]
         )
