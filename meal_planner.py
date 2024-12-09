@@ -56,17 +56,10 @@ def load_api_keys():
 
 # --- Spoonacular API Call ---
 def get_meal_ideas(ingredients, meal_type, api_key):
-    """Call the Spoonacular API to get halal meal and drink ideas."""
+    """Call the Spoonacular API to get halal meal ideas."""
     url = "https://api.spoonacular.com/recipes/complexSearch"
-    
-    # Custom query for drinks
-    if meal_type == "Drink":
-        query = "drink, beverage, smoothie, juice, mocktail"
-    else:
-        query = meal_type
-
     params = {
-        "query": query,
+        "query": meal_type,
         "includeIngredients": ingredients,
         "number": 10, 
         "apiKey": api_key,
@@ -144,7 +137,7 @@ def create_meal_planner_with_categories():
 
     st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold; color: #86AB89;">🍅 What is in your fridge?</p>', unsafe_allow_html=True)
     ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')", placeholder="Type your ingredients...")
-    meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack", "Drink"])
+    meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack"])
 
     if st.button("🍲 Get Meal Ideas"):
         with st.spinner("Fetching meal ideas... 🍳"):
