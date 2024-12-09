@@ -4,7 +4,6 @@ import streamlit as st
 from dotenv import load_dotenv
 import requests
 from datetime import datetime
-import random
 import google.generativeai as genai
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -163,26 +162,21 @@ def create_meal_planner_with_categories():
 
         add_to_memory(f"Ingredients: {ingredients}, Meal Type: {meal_type}", bot_response)
 
-    if st.button("🎉 Surprise Me!"):
-        with st.spinner("Fetching a surprise meal... 🍳"):
-            surprise_recipes = get_meal_ideas('', 'any', spoonacular_key)
-            if surprise_recipes:
-                random_recipe = random.choice(surprise_recipes)
-                st.markdown(f"## 🎉 Surprise Meal")
-                st.write(f"**{random_recipe.get('title', 'No title')}**")
-                st.image(random_recipe.get("image", ""), width=200)
-                st.write(f"Ingredients: {', '.join([i['name'] for i in random_recipe.get('extendedIngredients', [])])}")
-                st.write(f"[Full Recipe]({random_recipe.get('sourceUrl', '#')})")
-
     # Chat Box
     st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold;">💬 Ask me anything!</p>', unsafe_allow_html=True)
     user_input = st.text_input("You:", placeholder="Ask me about meals, ingredients, or anything else...")
     if user_input:
-        response = llm.invoke(user_input)
+        context = "\n".join(
+            [f"You: {chat['user']}\nBot: {chat['bot']}" for chat in st.session_state.get("history", [])]
+        )
+        full_input = f"{context}\nYou: {user_input}\nBot:"
+        response = llm.invoke(full_input)
         bot_response = response.content
+
         st.write(f"🤖 **Bot:** {bot_response}")
         add_to_memory(user_input, bot_response)
 
+    # Display Conversation History
     display_memory()
 
 # --- Main Execution ---
