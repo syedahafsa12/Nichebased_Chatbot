@@ -52,7 +52,7 @@ def load_api_keys():
     
     return spoonacular_key, gemini_key
 
-# --- Spoonacular API Call ---
+# --- Spoonacular API Calls ---
 def get_meal_ideas(ingredients, meal_type, api_key):
     """Call the Spoonacular API to get meal ideas."""
     url = "https://api.spoonacular.com/recipes/complexSearch"
@@ -119,8 +119,8 @@ def get_recipe_details(recipe_id, api_key):
 # --- Streamlit App ---
 def create_meal_planner_with_categories():
     add_custom_css()
-    st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold;">Your Smart Halal Meal & Chat Assistant</p>', unsafe_allow_html=True)
+    st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)  # Title not changed
+    st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold;">Your Smart Recipe & Chat Assistant</p>', unsafe_allow_html=True)
 
     try:
         spoonacular_key, gemini_key = load_api_keys()
