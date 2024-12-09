@@ -116,36 +116,66 @@ def get_recipe_details(recipe_id, api_key):
     except Exception as e:
         return None
 
+# --- Chat Memory Management ---
+def add_to_memory(user_input, bot_response):
+    if "history" not in st.session_state:
+        st.session_state["history"] = []
+    st.session_state["history"].append({
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "user": user_input,
+        "bot": bot_response,
+    })
+    if len(st.session_state["history"]) > 10:
+        st.session_state["history"].pop(0)
+
+def display_memory():
+    st.markdown('<p style="text-align: center; font-size: 24px; font-weight: bold;">💬 Conversation History</p>', unsafe_allow_html=True)
+    if "history" in st.session_state:
+        for chat in reversed(st.session_state["history"]):
+            st.write(f"🕒 {chat['timestamp']}")
+            st.write(f"**You:** {chat['user']}")
+            st.write(f"**Bot:** {chat['bot']}")
+            st.divider()
+
 # --- Streamlit App ---
 def create_meal_planner_with_categories():
     add_custom_css()
-    st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)  # Title not changed
+    st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)
     st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold;">Your Smart Recipe & Chat Assistant</p>', unsafe_allow_html=True)
 
     try:
         spoonacular_key, gemini_key = load_api_keys()
+        genai.configure(api_key=gemini_key)
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", google_api_key=gemini_key)
     except Exception as e:
         return
 
-    ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')", placeholder="Type your ingredients...")
+    ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')")
     meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack"])
 
     if st.button("🍲 Get Meal Ideas"):
         with st.spinner("Fetching meal ideas... 🍳"):
-            spoonacular_recipes = get_meal_ideas(ingredients, meal_type, spoonacular_key)
-            if spoonacular_recipes:
-                for recipe in spoonacular_recipes:
-                    st.write(f"**{recipe.get('title', 'No title')}**")
-                    st.image(recipe.get("image", ""), width=200)
-                    st.write(f"[Full Recipe]({recipe.get('sourceUrl', '#')})")
+            recipes = get_meal_ideas(ingredients, meal_type, spoonacular_key)
+            for recipe in recipes:
+                st.write(f"**{recipe.get('title')}**")
+                st.image(recipe.get("image"), width=200)
+                st.write(f"[Full Recipe]({recipe.get('sourceUrl')})")
 
     if st.button("🎉 Surprise Me!"):
         with st.spinner("Fetching a surprise meal... 🎉"):
-            random_recipe = get_random_meal(spoonacular_key)
-            if random_recipe:
-                st.write(f"**{random_recipe.get('title', 'No title')}**")
-                st.image(random_recipe.get("image", ""), width=200)
-                st.write(f"[Full Recipe]({random_recipe.get('sourceUrl', '#')})")
+            recipe = get_random_meal(spoonacular_key)
+            if recipe:
+                st.write(f"**{recipe.get('title')}**")
+                st.image(recipe.get("image"), width=200)
+                st.write(f"[Full Recipe]({recipe.get('sourceUrl')})")
+
+    user_input = st.text_input("You:")
+    if user_input:
+        response = llm.invoke(user_input)
+        st.write(f"🤖 **Bot:** {response.content}")
+        add_to_memory(user_input, response.content)
+
+    display_memory()
 
 if __name__ == "__main__":
     create_meal_planner_with_categories()
