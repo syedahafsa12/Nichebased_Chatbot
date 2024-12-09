@@ -39,6 +39,7 @@ def add_custom_css():
 
 # --- Load API Keys ---
 def load_api_keys():
+    """Fetch API keys for Spoonacular and Gemini."""
     spoonacular_key = None
     gemini_key = None
 
@@ -56,7 +57,7 @@ def load_api_keys():
 
 # --- Spoonacular API Call ---
 def get_meal_ideas(ingredients, meal_type, api_key):
-    """Call the Spoonacular API to get halal meal ideas."""
+    """Call the Spoonacular API to get meal ideas."""
     url = "https://api.spoonacular.com/recipes/complexSearch"
     params = {
         "query": meal_type,
@@ -70,16 +71,11 @@ def get_meal_ideas(ingredients, meal_type, api_key):
         response.raise_for_status()
         recipes = response.json().get("results", [])
         
-        # Filter recipes to ensure they are halal
-        halal_keywords = ['chicken', 'beef', 'fish', 'vegetarian', 'vegan', 'egg', 'lentil', 'chickpea', 'bean', 'seafood', 'milk', 'juice', 'fruit']
         detailed_recipes = []
         for recipe in recipes:
             recipe_id = recipe.get("id")
             details = get_recipe_details(recipe_id, api_key)
-            ingredients_list = [i['name'].lower() for i in details.get("extendedIngredients", [])]
-            
-            # Check if ingredients match halal-friendly keywords
-            if any(halal_item in ingredients_list for halal_item in halal_keywords):
+            if details and ingredients.lower() in str(details.get("extendedIngredients", "")).lower():
                 detailed_recipes.append(details)
 
         return detailed_recipes
@@ -100,6 +96,7 @@ def get_recipe_details(recipe_id, api_key):
 
 # --- Chat Memory Management ---
 def add_to_memory(user_input, bot_response):
+    """Add a conversation to memory (limit to 10)."""
     if "history" not in st.session_state:
         st.session_state["history"] = []
     
@@ -110,12 +107,13 @@ def add_to_memory(user_input, bot_response):
     })
 
     if len(st.session_state["history"]) > 10:
-        st.session_state["history"].pop(0)
+        st.session_state["history"].pop(0)  # Keep only the last 10 interactions
 
 def display_memory():
-    st.markdown('<p style="text-align: center; font-size: 24px; font-weight: bold; color: #86AB89;">💬 Conversation History</p>', unsafe_allow_html=True)
+    """Display the last 10 chats."""
+    st.markdown('<p style="text-align: center; font-size: 24px; font-weight: bold;">💬 Conversation History</p>', unsafe_allow_html=True)
     if "history" in st.session_state:
-        for chat in reversed(st.session_state["history"]): 
+        for chat in reversed(st.session_state["history"]):  # Show latest first
             st.write(f"🕒 {chat['timestamp']}")
             st.write(f"**You:** {chat['user']}")
             st.write(f"**Bot:** {chat['bot']}")
@@ -123,34 +121,47 @@ def display_memory():
 
 # --- Streamlit App ---
 def create_meal_planner_with_categories():
+    """Main Meal Planner with Meal Categories and Seamless Chat."""
     add_custom_css()
 
+    # Title and Header
     st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold; color: #86AB89;">Your Smart Recipe & Chat Assistant</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold;">Your Smart Recipe & Chat Assistant</p>', unsafe_allow_html=True)
 
+    # Load API Keys
     try:
         spoonacular_key, gemini_key = load_api_keys()
         genai.configure(api_key=gemini_key)
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", google_api_key=gemini_key)
     except Exception as e:
         st.error(f"Error loading API keys: {e}")
         return
 
-    st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold; color: #86AB89;">🍅 What is in your fridge?</p>', unsafe_allow_html=True)
+    # Ingredient Input
+    st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold;">🍅 What is in your fridge?</p>', unsafe_allow_html=True)
     ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')", placeholder="Type your ingredients...")
     meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack"])
 
     if st.button("🍲 Get Meal Ideas"):
         with st.spinner("Fetching meal ideas... 🍳"):
             spoonacular_recipes = get_meal_ideas(ingredients, meal_type, spoonacular_key)
-            if not spoonacular_recipes:
-                st.warning(f"No {meal_type.lower()} meal ideas found! Try adding more ingredients.")
-            else:
-                st.markdown(f"## 🍽️ {meal_type} Meal Suggestions")
-                for recipe in spoonacular_recipes:
-                    st.write(f"**{recipe.get('title', 'No title')}**")
-                    st.image(recipe.get("image", ""), width=200)
-                    st.write(f"Ingredients: {', '.join([i['name'] for i in recipe.get('extendedIngredients', [])])}")
-                    st.write(f"[Full Recipe]({recipe.get('sourceUrl', '#')})")
+
+        if isinstance(spoonacular_recipes, dict) and "error" in spoonacular_recipes:
+            st.error(f"Spoonacular Error: {spoonacular_recipes['error']}")
+            bot_response = "Sorry, I couldn't fetch meal ideas right now. Try again later!"
+        elif not spoonacular_recipes:
+            st.warning(f"No {meal_type.lower()} meal ideas found! Try adding more ingredients.")
+            bot_response = f"I couldn't find any {meal_type.lower()} meal ideas based on those ingredients."
+        else:
+            st.markdown(f"## 🍽️ {meal_type} Meal Suggestions")
+            bot_response = f"Here are some {meal_type.lower()} meal ideas based on your ingredients:"
+            for recipe in spoonacular_recipes:
+                st.write(f"**{recipe.get('title', 'No title')}**")
+                st.image(recipe.get("image", ""), width=200)
+                st.write(f"Ingredients: {', '.join([i['name'] for i in recipe.get('extendedIngredients', [])])}")
+                st.write(f"[Full Recipe]({recipe.get('sourceUrl', '#')})")
+
+        add_to_memory(f"Ingredients: {ingredients}, Meal Type: {meal_type}", bot_response)
 
     if st.button("🎉 Surprise Me!"):
         with st.spinner("Fetching a surprise meal... 🍳"):
@@ -163,7 +174,17 @@ def create_meal_planner_with_categories():
                 st.write(f"Ingredients: {', '.join([i['name'] for i in random_recipe.get('extendedIngredients', [])])}")
                 st.write(f"[Full Recipe]({random_recipe.get('sourceUrl', '#')})")
 
+    # Chat Box
+    st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold;">💬 Ask me anything!</p>', unsafe_allow_html=True)
+    user_input = st.text_input("You:", placeholder="Ask me about meals, ingredients, or anything else...")
+    if user_input:
+        response = llm.invoke(user_input)
+        bot_response = response.content
+        st.write(f"🤖 **Bot:** {bot_response}")
+        add_to_memory(user_input, bot_response)
+
     display_memory()
 
+# --- Main Execution ---
 if __name__ == "__main__":
     create_meal_planner_with_categories()
