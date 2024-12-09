@@ -54,7 +54,7 @@ def load_api_keys():
 
 # --- Spoonacular API Call ---
 def get_meal_ideas(ingredients, meal_type, api_key):
-    """Call the Spoonacular API to get halal meal ideas."""
+    """Call the Spoonacular API to get meal ideas."""
     url = "https://api.spoonacular.com/recipes/complexSearch"
     params = {
         "query": meal_type,
@@ -76,7 +76,7 @@ def get_random_meal(api_key):
     """Fetch a random recipe and ensure it is halal."""
     url = f"https://api.spoonacular.com/recipes/random?number=1&apiKey={api_key}"
     try:
-        while True:  # Keep retrying until a halal recipe is found
+        while True:
             response = requests.get(url)
             response.raise_for_status()
             recipe = response.json().get("recipes", [])[0]
