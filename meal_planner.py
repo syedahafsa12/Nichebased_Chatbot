@@ -4,6 +4,7 @@ import streamlit as st
 from dotenv import load_dotenv
 import requests
 from datetime import datetime
+import random
 import google.generativeai as genai
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -22,6 +23,7 @@ def add_custom_css():
         }
         p {
             text-align: center !important;
+            color: #86AB89;
         }
         .conversation-box {
             max-height: 300px;
@@ -55,7 +57,7 @@ def load_api_keys():
 
 # --- Spoonacular API Call ---
 def get_meal_ideas(ingredients, meal_type, api_key):
-    """Call the Spoonacular API to get meal ideas."""
+    """Call the Spoonacular API to get halal meal ideas."""
     url = "https://api.spoonacular.com/recipes/complexSearch"
     params = {
         "query": meal_type,
@@ -69,11 +71,16 @@ def get_meal_ideas(ingredients, meal_type, api_key):
         response.raise_for_status()
         recipes = response.json().get("results", [])
         
+        # Filter recipes to ensure they are halal (example logic can be improved)
+        halal_keywords = ['chicken', 'beef', 'fish', 'vegetarian', 'vegan', 'egg', 'lentil', 'chickpea', 'bean', 'seafood']
         detailed_recipes = []
         for recipe in recipes:
             recipe_id = recipe.get("id")
             details = get_recipe_details(recipe_id, api_key)
-            if details and ingredients.lower() in str(details.get("extendedIngredients", "")).lower():
+            ingredients_list = [i['name'].lower() for i in details.get("extendedIngredients", [])]
+            
+            # Check if the ingredients are in the list of halal-friendly items
+            if any(halal_item in ingredients_list for halal_item in halal_keywords):
                 detailed_recipes.append(details)
 
         return detailed_recipes
@@ -138,7 +145,7 @@ def create_meal_planner_with_categories():
     # Ingredient Input
     st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold; color: #86AB89;">🍅 What is in your fridge?</p>', unsafe_allow_html=True)
     ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')", placeholder="Type your ingredients...")
-    meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack"])
+    meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack", "Drink"])
 
     if st.button("🍲 Get Meal Ideas"):
         with st.spinner("Fetching meal ideas... 🍳"):
@@ -146,36 +153,27 @@ def create_meal_planner_with_categories():
 
         if isinstance(spoonacular_recipes, dict) and "error" in spoonacular_recipes:
             st.error(f"Spoonacular Error: {spoonacular_recipes['error']}")
-            bot_response = "Sorry, I couldn't fetch meal ideas right now. Try again later!"
         elif not spoonacular_recipes:
             st.warning(f"No {meal_type.lower()} meal ideas found! Try adding more ingredients.")
-            bot_response = f"I couldn't find any {meal_type.lower()} meal ideas based on those ingredients."
         else:
             st.markdown(f"## 🍽️ {meal_type} Meal Suggestions")
-            bot_response = f"Here are some {meal_type.lower()} meal ideas based on your ingredients:"
             for recipe in spoonacular_recipes:
                 st.write(f"**{recipe.get('title', 'No title')}**")
                 st.image(recipe.get("image", ""), width=200)
                 st.write(f"Ingredients: {', '.join([i['name'] for i in recipe.get('extendedIngredients', [])])}")
                 st.write(f"[Full Recipe]({recipe.get('sourceUrl', '#')})")
 
-        add_to_memory(f"Ingredients: {ingredients}, Meal Type: {meal_type}", bot_response)
+    if st.button("🎉 Surprise Me!"):
+        with st.spinner("Fetching a surprise meal... 🍳"):
+            surprise_recipes = get_meal_ideas('', 'any', spoonacular_key)
+            if surprise_recipes:
+                random_recipe = random.choice(surprise_recipes)
+                st.markdown(f"## 🎉 Surprise Meal")
+                st.write(f"**{random_recipe.get('title', 'No title')}**")
+                st.image(random_recipe.get("image", ""), width=200)
+                st.write(f"Ingredients: {', '.join([i['name'] for i in random_recipe.get('extendedIngredients', [])])}")
+                st.write(f"[Full Recipe]({random_recipe.get('sourceUrl', '#')})")
 
-    # Chat Box
-    st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold; color: #86AB89;">💬 Ask me anything!</p>', unsafe_allow_html=True)
-    user_input = st.text_input("You:", placeholder="Ask me about meals, ingredients, or anything else...")
-    if user_input:
-        context = "\n".join(
-            [f"You: {chat['user']}\nBot: {chat['bot']}" for chat in st.session_state.get("history", [])]
-        )
-        full_input = f"{context}\nYou: {user_input}\nBot:"
-        response = llm.invoke(full_input)
-        bot_response = response.content
-
-        st.write(f"🤖 **Bot:** {bot_response}")
-        add_to_memory(user_input, bot_response)
-
-    # Display Conversation History
     display_memory()
 
 # --- Main Execution ---
