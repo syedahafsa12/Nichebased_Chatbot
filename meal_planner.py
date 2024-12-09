@@ -39,7 +39,6 @@ def add_custom_css():
 
 # --- Load API Keys ---
 def load_api_keys():
-    """Fetch API keys for Spoonacular and Gemini."""
     spoonacular_key = None
     gemini_key = None
 
@@ -57,10 +56,17 @@ def load_api_keys():
 
 # --- Spoonacular API Call ---
 def get_meal_ideas(ingredients, meal_type, api_key):
-    """Call the Spoonacular API to get halal meal ideas."""
+    """Call the Spoonacular API to get halal meal and drink ideas."""
     url = "https://api.spoonacular.com/recipes/complexSearch"
+    
+    # Custom query for drinks
+    if meal_type == "Drink":
+        query = "drink, beverage, smoothie, juice, mocktail"
+    else:
+        query = meal_type
+
     params = {
-        "query": meal_type,
+        "query": query,
         "includeIngredients": ingredients,
         "number": 10, 
         "apiKey": api_key,
@@ -71,15 +77,15 @@ def get_meal_ideas(ingredients, meal_type, api_key):
         response.raise_for_status()
         recipes = response.json().get("results", [])
         
-        # Filter recipes to ensure they are halal (example logic can be improved)
-        halal_keywords = ['chicken', 'beef', 'fish', 'vegetarian', 'vegan', 'egg', 'lentil', 'chickpea', 'bean', 'seafood']
+        # Filter recipes to ensure they are halal
+        halal_keywords = ['chicken', 'beef', 'fish', 'vegetarian', 'vegan', 'egg', 'lentil', 'chickpea', 'bean', 'seafood', 'milk', 'juice', 'fruit']
         detailed_recipes = []
         for recipe in recipes:
             recipe_id = recipe.get("id")
             details = get_recipe_details(recipe_id, api_key)
             ingredients_list = [i['name'].lower() for i in details.get("extendedIngredients", [])]
             
-            # Check if the ingredients are in the list of halal-friendly items
+            # Check if ingredients match halal-friendly keywords
             if any(halal_item in ingredients_list for halal_item in halal_keywords):
                 detailed_recipes.append(details)
 
@@ -101,7 +107,6 @@ def get_recipe_details(recipe_id, api_key):
 
 # --- Chat Memory Management ---
 def add_to_memory(user_input, bot_response):
-    """Add a conversation to memory (limit to 10)."""
     if "history" not in st.session_state:
         st.session_state["history"] = []
     
@@ -112,13 +117,12 @@ def add_to_memory(user_input, bot_response):
     })
 
     if len(st.session_state["history"]) > 10:
-        st.session_state["history"].pop(0)  # Keep only the last 10 interactions
+        st.session_state["history"].pop(0)
 
 def display_memory():
-    """Display the last 10 chats."""
     st.markdown('<p style="text-align: center; font-size: 24px; font-weight: bold; color: #86AB89;">💬 Conversation History</p>', unsafe_allow_html=True)
     if "history" in st.session_state:
-        for chat in reversed(st.session_state["history"]):  # Show latest first
+        for chat in reversed(st.session_state["history"]): 
             st.write(f"🕒 {chat['timestamp']}")
             st.write(f"**You:** {chat['user']}")
             st.write(f"**Bot:** {chat['bot']}")
@@ -126,23 +130,18 @@ def display_memory():
 
 # --- Streamlit App ---
 def create_meal_planner_with_categories():
-    """Main Meal Planner with Meal Categories and Seamless Chat."""
     add_custom_css()
 
-    # Title and Header
     st.markdown("<h1>🍽️ ChefMate</h1>", unsafe_allow_html=True)
     st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold; color: #86AB89;">Your Smart Recipe & Chat Assistant</p>', unsafe_allow_html=True)
 
-    # Load API Keys
     try:
         spoonacular_key, gemini_key = load_api_keys()
         genai.configure(api_key=gemini_key)
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", google_api_key=gemini_key)
     except Exception as e:
         st.error(f"Error loading API keys: {e}")
         return
 
-    # Ingredient Input
     st.markdown('<p style="text-align: center; font-size: 20px; font-weight: bold; color: #86AB89;">🍅 What is in your fridge?</p>', unsafe_allow_html=True)
     ingredients = st.text_input("List your ingredients (e.g., 'chicken, tomato, potato')", placeholder="Type your ingredients...")
     meal_type = st.selectbox("What type of meal are you planning?", ["Breakfast", "Lunch", "Dinner", "Snack", "Drink"])
@@ -150,18 +149,15 @@ def create_meal_planner_with_categories():
     if st.button("🍲 Get Meal Ideas"):
         with st.spinner("Fetching meal ideas... 🍳"):
             spoonacular_recipes = get_meal_ideas(ingredients, meal_type, spoonacular_key)
-
-        if isinstance(spoonacular_recipes, dict) and "error" in spoonacular_recipes:
-            st.error(f"Spoonacular Error: {spoonacular_recipes['error']}")
-        elif not spoonacular_recipes:
-            st.warning(f"No {meal_type.lower()} meal ideas found! Try adding more ingredients.")
-        else:
-            st.markdown(f"## 🍽️ {meal_type} Meal Suggestions")
-            for recipe in spoonacular_recipes:
-                st.write(f"**{recipe.get('title', 'No title')}**")
-                st.image(recipe.get("image", ""), width=200)
-                st.write(f"Ingredients: {', '.join([i['name'] for i in recipe.get('extendedIngredients', [])])}")
-                st.write(f"[Full Recipe]({recipe.get('sourceUrl', '#')})")
+            if not spoonacular_recipes:
+                st.warning(f"No {meal_type.lower()} meal ideas found! Try adding more ingredients.")
+            else:
+                st.markdown(f"## 🍽️ {meal_type} Meal Suggestions")
+                for recipe in spoonacular_recipes:
+                    st.write(f"**{recipe.get('title', 'No title')}**")
+                    st.image(recipe.get("image", ""), width=200)
+                    st.write(f"Ingredients: {', '.join([i['name'] for i in recipe.get('extendedIngredients', [])])}")
+                    st.write(f"[Full Recipe]({recipe.get('sourceUrl', '#')})")
 
     if st.button("🎉 Surprise Me!"):
         with st.spinner("Fetching a surprise meal... 🍳"):
@@ -176,6 +172,5 @@ def create_meal_planner_with_categories():
 
     display_memory()
 
-# --- Main Execution ---
 if __name__ == "__main__":
     create_meal_planner_with_categories()
